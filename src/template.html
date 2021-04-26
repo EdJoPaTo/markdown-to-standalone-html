@@ -20,14 +20,16 @@
             padding: 0 0 0 10px;
         }
 
-        .toc a {
+        .toc * {
+            overflow: hidden;
             text-decoration: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         @media screen and (min-width: 1350px) {
             .toc {
                 padding: 0 0.5rem;
-                overflow: hidden;
                 position: fixed;
                 width: 250px;
             }
