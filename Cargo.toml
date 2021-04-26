@@ -1,0 +1,13 @@
+[package]
+name = "markdown-to-standalone-html"
+description = "Create a standalone HTML file from Markdown with basic CSS"
+version = "0.1.0"
+license = "MIT"
+authors = ["EdJoPaTo <markdown-to-standalone-html@edjopato.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+markdown = "0.3"
+regex = "1"
