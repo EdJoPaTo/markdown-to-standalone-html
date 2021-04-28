@@ -1,15 +1,30 @@
-use std::env;
 use std::fs;
+use std::io::Read;
 
+mod cli;
 mod heading;
 
 const TEMPLATE: &str = include_str!("template.html");
 
 fn main() {
-    let path = env::args()
-        .nth(1)
-        .expect("failed to read command line argument");
-    let markdown = fs::read_to_string(path).expect("failed to read file from argument");
+    let matches = cli::build().get_matches();
+
+    if matches.subcommand_matches("template").is_some() {
+        println!("{}", TEMPLATE);
+        return;
+    }
+
+    let input_path = matches.value_of("markdown-file").unwrap();
+    let markdown = if input_path == "-" {
+        let mut input = String::new();
+        std::io::stdin()
+            .lock()
+            .read_to_string(&mut input)
+            .expect("failed to read from stdin");
+        input
+    } else {
+        fs::read_to_string(input_path).expect("failed to read markdown file")
+    };
 
     let html_part = markdown::to_html(&markdown);
 
