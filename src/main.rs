@@ -6,6 +6,14 @@ mod heading;
 
 const TEMPLATE: &str = include_str!("template.html");
 
+const META_GENERATOR: &str = concat!(
+    r#"<meta name="generator" content=""#,
+    env!("CARGO_PKG_REPOSITORY"),
+    " ",
+    env!("CARGO_PKG_VERSION"),
+    r#"" />"#
+);
+
 fn main() {
     let matches = cli::build().get_matches();
 
@@ -36,12 +44,14 @@ fn main() {
     let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
 
-    let result_html = template.replace(
-        "<main></main>",
-        &format!(
-            r#"<div class="toc">{}</div><main>{}</main>"#,
-            toc_part, html_part
-        ),
-    );
+    let result_html = template
+        .replace(r#"<meta name="generator" content="" />"#, META_GENERATOR)
+        .replace(
+            "<main></main>",
+            &format!(
+                r#"<div class="toc">{}</div><main>{}</main>"#,
+                toc_part, html_part
+            ),
+        );
     println!("{}", result_html);
 }

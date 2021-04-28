@@ -3,6 +3,7 @@ name = "markdown-to-standalone-html"
 description = "Create a standalone HTML file from Markdown with basic CSS"
 version = "0.1.0"
 license = "MIT"
+repository = "https://github.com/EdJoPaTo/markdown-to-standalone-html"
 authors = ["EdJoPaTo <markdown-to-standalone-html@edjopato.de>"]
 edition = "2018"
 
