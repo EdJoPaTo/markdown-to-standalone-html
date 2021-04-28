@@ -26,12 +26,17 @@ fn main() {
         fs::read_to_string(input_path).expect("failed to read markdown file")
     };
 
+    let template = matches.value_of("template-file").map_or_else(
+        || TEMPLATE.to_string(),
+        |path| fs::read_to_string(path).expect("failed to read template file"),
+    );
+
     let html_part = markdown::to_html(&markdown);
 
     let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
 
-    let result_html = TEMPLATE.replace(
+    let result_html = template.replace(
         "<main></main>",
         &format!(
             r#"<div class="toc">{}</div><main>{}</main>"#,

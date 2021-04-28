@@ -11,6 +11,15 @@ pub fn build() -> App<'static, 'static> {
             SubCommand::with_name("template").about("Print the included template to stdout."),
         )
         .arg(
+            Arg::with_name("template-file")
+                .long("template")
+                .short("t")
+                .value_name("FILE")
+                .takes_value(true)
+                .help("Template file to be used instead of the builtin one.")
+                .long_help("Template file to be used instead of the builtin one. Use the subcommand template to print the builtin template to stdout."),
+        )
+        .arg(
             Arg::with_name("markdown-file")
                 .value_name("FILE")
                 .takes_value(true)
