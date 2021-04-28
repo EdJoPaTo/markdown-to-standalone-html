@@ -1,18 +1,14 @@
 use std::fs;
 use std::io::Read;
 
+use handlebars::Handlebars;
+use serde_json::json;
+
 mod cli;
 mod heading;
 
+const GENERATOR: &str = concat!(env!("CARGO_PKG_REPOSITORY"), " ", env!("CARGO_PKG_VERSION"));
 const TEMPLATE: &str = include_str!("template.html");
-
-const META_GENERATOR: &str = concat!(
-    r#"<meta name="generator" content=""#,
-    env!("CARGO_PKG_REPOSITORY"),
-    " ",
-    env!("CARGO_PKG_VERSION"),
-    r#"" />"#
-);
 
 fn main() {
     let matches = cli::build().get_matches();
@@ -44,14 +40,21 @@ fn main() {
     let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
 
-    let result_html = template
-        .replace(r#"<meta name="generator" content="" />"#, META_GENERATOR)
-        .replace(
-            "<main></main>",
-            &format!(
-                r#"<div class="toc">{}</div><main>{}</main>"#,
-                toc_part, html_part
-            ),
-        );
+    let body = format!(
+        r#"<div class="toc">{}</div><main>{}</main>"#,
+        toc_part, html_part
+    );
+
+    let result_html = Handlebars::new()
+        .render_template(
+            &template,
+            &json!({
+                "body": body,
+                "generator": GENERATOR,
+                "title": "WORK IN PROGRESS",
+            }),
+        )
+        .expect("failed to render template");
+
     println!("{}", result_html);
 }
