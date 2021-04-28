@@ -4,9 +4,9 @@ use regex::Regex;
 
 #[derive(Debug, PartialEq)]
 pub struct Heading {
-    level: usize,
-    slug: String,
-    title: String,
+    pub level: usize,
+    pub slug: String,
+    pub title: String,
 }
 
 pub fn from_html(html: &str) -> Vec<Heading> {

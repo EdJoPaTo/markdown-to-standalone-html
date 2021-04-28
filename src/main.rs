@@ -40,6 +40,8 @@ fn main() {
     let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
 
+    let title = headings.first().map(|o| o.title.to_owned());
+
     let body = format!(
         r#"<div class="toc">{}</div><main>{}</main>"#,
         toc_part, html_part
@@ -51,7 +53,7 @@ fn main() {
             &json!({
                 "body": body,
                 "generator": GENERATOR,
-                "title": "WORK IN PROGRESS",
+                "title": title,
             }),
         )
         .expect("failed to render template");
