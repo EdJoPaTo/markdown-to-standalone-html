@@ -6,6 +6,7 @@ use serde_json::json;
 
 mod cli;
 mod heading;
+mod highlight_code;
 mod md2html;
 
 const GENERATOR: &str = concat!(env!("CARGO_PKG_REPOSITORY"), " ", env!("CARGO_PKG_VERSION"));

@@ -1,7 +1,8 @@
-use pulldown_cmark::{CowStr, Event, Parser, Tag};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser, Tag};
 use regex::Regex;
 
 use crate::heading::Heading;
+use crate::highlight_code::Highlighter;
 
 pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
     let parser = Parser::new(markdown);
@@ -10,28 +11,37 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
     let mut heading_level = 0;
     let mut headings = Vec::new();
 
+    let code_highlighter = Highlighter::new("base16-ocean.dark");
+    let mut code_language = None;
+
     let parser = parser.filter_map(|event| match event {
+        Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+            code_language = Some(lang.to_string());
+            Some(Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))))
+        }
         Event::Start(Tag::Heading(level @ 1..=6)) => {
             heading_level = level;
             None
         }
-        Event::Text(text) => {
-            if heading_level == 0 {
-                Some(Event::Text(text))
-            } else {
-                let anchor = create_anchor_of_title(&mut heading_anchors, &text);
-                let event = Event::Html(CowStr::from(format!(
-                    "<h{} id=\"{}\">{}",
-                    heading_level, anchor, text
-                )));
-                headings.push(Heading {
-                    level: heading_level,
-                    anchor,
-                    title: text.to_string(),
-                });
-                heading_level = 0;
-                Some(event)
-            }
+        Event::Text(text) if heading_level > 0 => {
+            let anchor = create_anchor_of_title(&mut heading_anchors, &text);
+            let event = Event::Html(CowStr::from(format!(
+                "<h{} id=\"{}\">{}",
+                heading_level, anchor, text
+            )));
+            headings.push(Heading {
+                level: heading_level,
+                anchor,
+                title: text.to_string(),
+            });
+            heading_level = 0;
+            Some(event)
+        }
+        Event::Text(text) if code_language.is_some() => {
+            let language = &code_language.as_ref().unwrap();
+            let html = code_highlighter.highlight(language, &text);
+            code_language = None;
+            Some(Event::Html(CowStr::from(html)))
         }
         _ => Some(event),
     });
