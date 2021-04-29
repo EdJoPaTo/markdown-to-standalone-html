@@ -41,7 +41,7 @@ fn main() {
     let title = headings.first().map(|o| o.title.to_owned());
 
     let body = format!(
-        r#"<div class="toc">{}</div><main>{}</main>"#,
+        r#"<nav class="toc">{}</nav><main>{}</main>"#,
         toc_part, html_part
     );
 

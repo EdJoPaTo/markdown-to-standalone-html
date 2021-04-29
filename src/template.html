@@ -11,40 +11,47 @@
             line-height: 1.5;
         }
 
-        main, .toc {
+        body {
             margin: 0 auto;
             padding: 0 1rem;
-            max-width: 800px;
+            max-width: 1000px;
         }
 
-        .toc ul {
+        nav.toc ul {
             padding: 0 0 0 10px;
         }
 
-        .toc * {
+        nav.toc li {
             overflow: hidden;
             text-decoration: none;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        @media screen and (min-width: 1250px) {
-            .toc {
+        @media screen and (min-width: 800px) {
+            nav.toc {
                 padding: 0;
                 position: fixed;
+                top: 0;
+                bottom: 0;
+                overflow-x: hidden;
+                overflow-y: auto;
                 width: 200px;
             }
-        }
-
-        @media screen and (min-width: 1350px) {
-            .toc {
-                width: 250px;
+            main {
+                margin-left: 220px;
             }
         }
 
-        @media screen and (min-width: 1450px) {
-            .toc {
+        @media screen and (min-width: 1000px) {
+            body {
+                max-width: 1100px;
+            }
+            nav.toc {
                 width: 300px;
+            }
+            main {
+                margin-left: 320px;
             }
         }
 
