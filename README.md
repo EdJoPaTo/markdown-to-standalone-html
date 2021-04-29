@@ -46,3 +46,7 @@ SUBCOMMANDS:
     raw         Only parse the markdown to html without any further modifications
     template    Print the included template to stdout.
 ```
+
+# Alternatives
+
+If you consider creating books from markdown (to HTML, PDF or EPUB) check out [crowbook](https://github.com/lise-henry/crowbook).
