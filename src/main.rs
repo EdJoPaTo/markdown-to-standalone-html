@@ -6,6 +6,7 @@ use serde_json::json;
 
 mod cli;
 mod heading;
+mod md2html;
 
 const GENERATOR: &str = concat!(env!("CARGO_PKG_REPOSITORY"), " ", env!("CARGO_PKG_VERSION"));
 const TEMPLATE: &str = include_str!("template.html");
@@ -21,21 +22,20 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("raw") {
         let input_path = matches.value_of("markdown-file").unwrap();
         let markdown = read_markdown(input_path);
-        let html_part = markdown::to_html(&markdown);
+        let (html_part, _) = md2html::parse(&markdown);
         println!("{}", html_part);
         return;
     }
 
     let input_path = matches.value_of("markdown-file").unwrap();
     let markdown = read_markdown(input_path);
-    let html_part = markdown::to_html(&markdown);
+    let (html_part, headings) = md2html::parse(&markdown);
 
     let template = matches.value_of("template-file").map_or_else(
         || TEMPLATE.to_string(),
         |path| fs::read_to_string(path).expect("failed to read template file"),
     );
 
-    let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
 
     let title = headings.first().map(|o| o.title.to_owned());
