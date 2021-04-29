@@ -18,24 +18,22 @@ fn main() {
         return;
     }
 
+    if let Some(matches) = matches.subcommand_matches("raw") {
+        let input_path = matches.value_of("markdown-file").unwrap();
+        let markdown = read_markdown(input_path);
+        let html_part = markdown::to_html(&markdown);
+        println!("{}", html_part);
+        return;
+    }
+
     let input_path = matches.value_of("markdown-file").unwrap();
-    let markdown = if input_path == "-" {
-        let mut input = String::new();
-        std::io::stdin()
-            .lock()
-            .read_to_string(&mut input)
-            .expect("failed to read from stdin");
-        input
-    } else {
-        fs::read_to_string(input_path).expect("failed to read markdown file")
-    };
+    let markdown = read_markdown(input_path);
+    let html_part = markdown::to_html(&markdown);
 
     let template = matches.value_of("template-file").map_or_else(
         || TEMPLATE.to_string(),
         |path| fs::read_to_string(path).expect("failed to read template file"),
     );
-
-    let html_part = markdown::to_html(&markdown);
 
     let headings = heading::from_html(&html_part);
     let toc_part = heading::to_html_toc(&headings);
@@ -59,4 +57,17 @@ fn main() {
         .expect("failed to render template");
 
     println!("{}", result_html);
+}
+
+fn read_markdown(input_path: &str) -> String {
+    if input_path == "-" {
+        let mut input = String::new();
+        std::io::stdin()
+            .lock()
+            .read_to_string(&mut input)
+            .expect("failed to read from stdin");
+        input
+    } else {
+        fs::read_to_string(input_path).expect("failed to read markdown file")
+    }
 }
