@@ -13,7 +13,7 @@ impl Highlighter {
         let now = std::time::Instant::now();
 
         let ss = SyntaxSet::load_defaults_newlines();
-        let theme = ThemeSet::load_defaults().themes["base16-ocean.dark"].to_owned();
+        let theme = ThemeSet::load_defaults().themes["base16-eighties.dark"].to_owned();
 
         #[cfg(debug_assertions)]
         eprintln!(
