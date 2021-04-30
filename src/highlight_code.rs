@@ -1,20 +1,19 @@
-use syntect::highlighting::ThemeSet;
+use syntect::highlighting::{Theme, ThemeSet};
 use syntect::html::highlighted_html_for_string;
 use syntect::parsing::SyntaxSet;
 
 pub struct Highlighter {
     ss: SyntaxSet,
-    ts: ThemeSet,
-    theme_name: String,
+    theme: Theme,
 }
 
 impl Highlighter {
-    pub fn new(theme_name: &str) -> Self {
+    pub fn new() -> Self {
         #[cfg(debug_assertions)]
         let now = std::time::Instant::now();
 
         let ss = SyntaxSet::load_defaults_newlines();
-        let ts = ThemeSet::load_defaults();
+        let theme = ThemeSet::load_defaults().themes["base16-ocean.dark"].to_owned();
 
         #[cfg(debug_assertions)]
         eprintln!(
@@ -22,19 +21,14 @@ impl Highlighter {
             std::time::Instant::now().duration_since(now)
         );
 
-        Self {
-            ss,
-            ts,
-            theme_name: theme_name.to_owned(),
-        }
+        Self { ss, theme }
     }
 
     pub fn highlight(&self, language: &str, text: &str) -> String {
-        let theme = &self.ts.themes[&self.theme_name];
         let syntax = self
             .ss
             .find_syntax_by_token(language)
             .unwrap_or_else(|| self.ss.find_syntax_plain_text());
-        highlighted_html_for_string(text, &self.ss, syntax, theme)
+        highlighted_html_for_string(text, &self.ss, syntax, &self.theme)
     }
 }

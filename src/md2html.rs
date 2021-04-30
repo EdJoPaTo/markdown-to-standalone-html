@@ -11,7 +11,7 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
     let mut heading_level = 0;
     let mut headings = Vec::new();
 
-    let code_highlighter = Highlighter::new("base16-ocean.dark");
+    let code_highlighter = Highlighter::new();
     let mut code_language = None;
 
     let parser = parser.filter_map(|event| match event {
