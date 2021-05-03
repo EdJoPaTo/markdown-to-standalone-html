@@ -25,3 +25,8 @@ features = ["wrap_help"]
 [dependencies.pulldown-cmark]
 version = "0.8"
 default-features = false
+
+[dependencies.html-inline]
+git = "https://github.com/EdJoPaTo/html-inline"
+tag = "v0.4.1"
+default-features = false

@@ -31,6 +31,12 @@ pub fn build() -> App<'static, 'static> {
                 .long_help("Template file to be used instead of the builtin one. Use the subcommand template to print the builtin template to stdout."),
         )
         .arg(
+            Arg::with_name("skip-inline")
+                .long("skip-inline")
+                .help("In case the inline process fails or is not needed it can be skipped.")
+                .long_help("In case the inline process fails or is not needed it can be skipped. The currently used library for inlining might panic which is unfortuned. Pipe the output into https://github.com/Y2Z/monolith instead then."),
+        )
+        .arg(
             &markdown_file,
         )
 }

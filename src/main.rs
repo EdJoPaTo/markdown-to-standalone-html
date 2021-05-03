@@ -57,6 +57,21 @@ fn main() {
         )
         .expect("failed to render template");
 
+    let result_html = if matches.is_present("skip-inline") {
+        result_html
+    } else {
+        // TODO: only warn on failed source (dont err -> panic)
+        // TODO: replace when https://github.com/Y2Z/monolith/issues/72 is done
+        let (inlined, skipped) =
+            html_inline::html_inline(&result_html).expect("failed to inline html");
+
+        for s in skipped {
+            eprintln!("SKIPPED {}", s);
+        }
+
+        inlined
+    };
+
     println!("{}", result_html);
 }
 
