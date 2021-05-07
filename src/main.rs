@@ -4,9 +4,12 @@ use std::io::Read;
 use handlebars::Handlebars;
 use serde_json::json;
 
+use crate::inline_assets::inline_assets;
+
 mod cli;
 mod heading;
 mod highlight_code;
+mod inline_assets;
 mod md2html;
 
 const GENERATOR: &str = concat!(env!("CARGO_PKG_REPOSITORY"), " ", env!("CARGO_PKG_VERSION"));
@@ -46,7 +49,7 @@ fn main() {
         toc_part, html_part
     );
 
-    let result_html = Handlebars::new()
+    let rendered = Handlebars::new()
         .render_template(
             &template,
             &json!({
@@ -57,7 +60,18 @@ fn main() {
         )
         .expect("failed to render template");
 
-    println!("{}", result_html);
+    let inlined = match inline_assets(rendered.clone()) {
+        Ok(html) => html,
+        Err(err) => {
+            eprintln!(
+                "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
+                err
+            );
+            rendered
+        }
+    };
+
+    println!("{}", inlined);
 }
 
 fn read_markdown(input_path: &str) -> String {

@@ -13,6 +13,7 @@ edition = "2018"
 lto = true
 
 [dependencies]
+anyhow = "1"
 handlebars = "3"
 regex = "1"
 serde_json = "1"
