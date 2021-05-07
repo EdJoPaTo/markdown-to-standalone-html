@@ -31,17 +31,17 @@ impl Headings {
             .trim_matches('-')
             .to_ascii_lowercase();
 
-        let mut anchor = main.to_owned();
+        let mut anchor = main.clone();
         let mut index = 1;
         while self.existing_anchors.contains(&anchor) {
             index += 1;
             anchor = format!("{}-{}", main, index);
         }
 
-        self.existing_anchors.push(anchor.to_owned());
+        self.existing_anchors.push(anchor.clone());
         self.list.push(Heading {
             level,
-            anchor: anchor.to_owned(),
+            anchor: anchor.clone(),
             title: title.to_string(),
         });
 

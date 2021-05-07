@@ -39,7 +39,7 @@ fn main() {
 
     let toc_part = heading::to_html_toc(&headings);
 
-    let title = headings.first().map(|o| o.title.to_owned());
+    let title = headings.first().map(|o| o.title.clone());
 
     let body = format!(
         r#"<nav class="toc">{}</nav><main>{}</main>"#,
