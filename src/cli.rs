@@ -35,7 +35,7 @@ pub fn build() -> App<'static, 'static> {
                 .long("no-inline")
                 .short("i")
                 .help("Don't try to inline assets.")
-                .long_help("Don't try to inline assets. Normally assets are inlined with monolith. When monolith is not in PATH a warning is shown. This warning is also suppressed with with flag."),
+                .long_help("Don't try to inline assets. Normally assets are inlined with monolith. When monolith is not in PATH a warning is shown. This warning is also suppressed with this flag."),
         )
         .arg(
             &markdown_file,
