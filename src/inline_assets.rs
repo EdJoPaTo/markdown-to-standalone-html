@@ -5,6 +5,8 @@ use anyhow::anyhow;
 
 pub fn inline_assets(html: String) -> anyhow::Result<String> {
     let mut child = Command::new("monolith")
+        .arg("--base-url")
+        .arg("file://.")
         .arg("-")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
