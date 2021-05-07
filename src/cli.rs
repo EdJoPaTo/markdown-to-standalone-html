@@ -31,6 +31,13 @@ pub fn build() -> App<'static, 'static> {
                 .long_help("Template file to be used instead of the builtin one. Use the subcommand template to print the builtin template to stdout."),
         )
         .arg(
+            Arg::with_name("no-inline")
+                .long("no-inline")
+                .short("i")
+                .help("Don't try to inline assets.")
+                .long_help("Don't try to inline assets. Normally assets are inlined with monolith. When monolith is not in PATH a warning is shown. This warning is also suppressed with with flag."),
+        )
+        .arg(
             &markdown_file,
         )
 }

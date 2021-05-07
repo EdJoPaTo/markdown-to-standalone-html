@@ -60,18 +60,22 @@ fn main() {
         )
         .expect("failed to render template");
 
-    let inlined = match inline_assets(rendered.clone()) {
-        Ok(html) => html,
-        Err(err) => {
-            eprintln!(
-                "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
-                err
-            );
-            rendered
-        }
-    };
+    if matches.is_present("no-inline") {
+        println!("{}", rendered);
+    } else {
+        let inlined = match inline_assets(rendered.clone()) {
+            Ok(html) => html,
+            Err(err) => {
+                eprintln!(
+                    "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
+                    err
+                );
+                rendered
+            }
+        };
 
-    println!("{}", inlined);
+        println!("{}", inlined);
+    }
 }
 
 fn read_markdown(input_path: &str) -> String {
