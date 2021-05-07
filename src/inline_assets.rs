@@ -27,5 +27,10 @@ pub fn inline_assets(html: String) -> anyhow::Result<String> {
 
     let output = child.wait_with_output()?;
     let inlined = String::from_utf8(output.stdout)?;
+
+    // The base is required for working from working directory.
+    // But the base will also kill the TOC links.
+    let inlined = inlined.replace(r#"<base href="file://."></base>"#, "");
+
     Ok(inlined)
 }
