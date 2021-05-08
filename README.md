@@ -19,6 +19,12 @@ If you want to have that feature make sure monolith is also installed and in the
 
 ## Prebuilt
 
+### Arch Linux (AUR)
+
+`paru -S markdown-to-standalone-html` or `yay -S markdown-to-standalone-html`
+
+### Other
+
 Check the [Releases](https://github.com/EdJoPaTo/markdown-to-standalone-html/releases).
 
 ## From Source
