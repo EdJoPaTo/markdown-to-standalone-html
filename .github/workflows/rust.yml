@@ -46,6 +46,9 @@ jobs:
         toolchain:
           - stable
           - nightly
+          - 1.41.1 # Debian 10 Buster
+          #- 1.47.0 # Alpine 3.13
+          #- 1.48.0 # Debian 11 Bullseye
     steps:
       - uses: actions/checkout@v2
 
@@ -89,6 +92,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get the version from the tag
+        shell: bash
+        run: |
+          version=$(git describe --tags --match "v*.*.*" --always)
+          echo "version is: $version"
+          echo "GIT_TAG_VERSION=$version" >> $GITHUB_ENV
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -112,13 +124,13 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd target/${{ matrix.triple }}/release
-          tar -czvf ../../../markdown-to-standalone-html-${{ matrix.triple }}.tar.gz markdown-to-standalone-html
+          tar -czvf ../../../markdown-to-standalone-html-${{ env.GIT_TAG_VERSION }}-${{ matrix.triple }}.tar.gz markdown-to-standalone-html
           cd -
       - name: Pack release (windows)
         if: runner.os == 'Windows'
         run: |
           cd target/${{ matrix.triple }}/release
-          7z a ../../../markdown-to-standalone-html-${{ matrix.triple }}.zip markdown-to-standalone-html.exe
+          7z a ../../../markdown-to-standalone-html-${{ env.GIT_TAG_VERSION }}-${{ matrix.triple }}.zip markdown-to-standalone-html.exe
           cd -
 
       - name: Upload Artifact
