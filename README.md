@@ -81,6 +81,6 @@ SUBCOMMANDS:
 
 # Alternatives
 
-If you consider creating books from markdown (to HTML, PDF or EPUB) check out [crowbook](https://github.com/lise-henry/crowbook).
-
-If you want to download articles and webpages as standalone HTML files check out [monolith](https://github.com/Y2Z/monolith).
+- [crowbook](https://github.com/lise-henry/crowbook) creates books from markdown to HTML, PDF or EPUB.
+- [monolith](https://github.com/Y2Z/monolith) downloads articles and webpages as standalone HTML files.
+- [Paperoni](https://github.com/hipstermojo/paperoni) downloads web articles as EPUB.
