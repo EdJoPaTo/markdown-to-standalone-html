@@ -26,9 +26,9 @@ jobs:
           - os: ubuntu-latest
             toolchain: nightly
             clippyargs: -W clippy::all -W clippy::pedantic
-          - os: ubuntu-latest
-            toolchain: 1.41.1 # Debian 10 Buster
-            clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+          # - os: ubuntu-latest
+          #   toolchain: 1.41.1 # Debian 10 Buster
+          #   clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
           - os: ubuntu-latest
             toolchain: 1.47.0 # Alpine 3.13
             clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
