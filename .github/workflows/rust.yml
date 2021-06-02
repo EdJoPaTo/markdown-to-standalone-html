@@ -15,26 +15,26 @@ jobs:
         include:
           - os: ubuntu-latest
             toolchain: stable
-            clippyargs: -D clippy::all -D clippy::pedantic
+            clippyargs: -D clippy::pedantic -D warnings
           - os: macOS-latest
             toolchain: stable
-            clippyargs: -D clippy::all -D clippy::pedantic
+            clippyargs: -D clippy::pedantic -D warnings
           - os: windows-latest
             toolchain: stable
-            clippyargs: -D clippy::all -D clippy::pedantic
+            clippyargs: -D clippy::pedantic -D warnings
 
           - os: ubuntu-latest
             toolchain: nightly
-            clippyargs: -W clippy::all -W clippy::pedantic
+            clippyargs: -W clippy::pedantic
           # - os: ubuntu-latest
           #   toolchain: 1.41.1 # Debian 10 Buster
-          #   clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+          #   clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
           - os: ubuntu-latest
             toolchain: 1.47.0 # Alpine 3.13
-            clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
           - os: ubuntu-latest
             toolchain: 1.48.0 # Debian 11 Bullseye
-            clippyargs: -W clippy::all -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
     steps:
       - uses: actions/checkout@v2
 
@@ -88,12 +88,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get the version from the tag
+      - name: Set Artifact Name
         shell: bash
         run: |
           version=$(git describe --tags --match "v*.*.*" --always)
           echo "version is: $version"
           echo "GIT_TAG_VERSION=$version" >> $GITHUB_ENV
+
+          name="markdown-to-standalone-html-$version-${{ matrix.triple }}"
+          echo "artifact name is: $name"
+          echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -115,15 +119,14 @@ jobs:
 
       - name: Pack release (-nix)
         if: runner.os != 'Windows'
-        run: |
-          cd target/${{ matrix.triple }}/release
-          tar -czvf ../../../markdown-to-standalone-html-${{ env.GIT_TAG_VERSION }}-${{ matrix.triple }}.tar.gz markdown-to-standalone-html
-          cd -
+        run: >
+          tar --gzip -cvf ${{ env.ARTIFACT_NAME }}.tar.gz
+          -C target/${{ matrix.triple }}/release markdown-to-standalone-html
       - name: Pack release (windows)
         if: runner.os == 'Windows'
         run: |
           cd target/${{ matrix.triple }}/release
-          7z a ../../../markdown-to-standalone-html-${{ env.GIT_TAG_VERSION }}-${{ matrix.triple }}.zip markdown-to-standalone-html.exe
+          7z a ../../../${{ env.ARTIFACT_NAME }}.zip markdown-to-standalone-html.exe
           cd -
 
       - name: Upload Artifact
