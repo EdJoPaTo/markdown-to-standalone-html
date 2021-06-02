@@ -1,5 +1,6 @@
 use clap::{App, AppSettings, Arg, SubCommand};
 
+#[must_use]
 pub fn build() -> App<'static, 'static> {
     let markdown_file = Arg::with_name("markdown-file")
         .value_name("FILE")
