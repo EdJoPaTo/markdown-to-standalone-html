@@ -6,38 +6,33 @@ on:
 
 jobs:
   test:
-    name: Test ${{ matrix.os }} ${{ matrix.toolchain }}
+    name: Test ${{ matrix.toolchain }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.toolchain == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
+        toolchain:
+          - stable
+        os:
+          - ubuntu-20.04
+          - macos-11
+          - windows-2022
+        clippyargs:
+          - -D clippy::pedantic -D warnings
+        features:
+          - --all-features
         include:
-          - os: ubuntu-latest
-            toolchain: stable
-            clippyargs: -D clippy::pedantic -D warnings
-          - os: macOS-latest
-            toolchain: stable
-            clippyargs: -D clippy::pedantic -D warnings
-          - os: windows-latest
-            toolchain: stable
-            clippyargs: -D clippy::pedantic -D warnings
-
-          - os: ubuntu-latest
-            toolchain: nightly
+          # Check future versions and maybe get some glances on soon to be lints
+          - toolchain: beta
+            os: ubuntu-20.04
+            features: --all-features
+            clippyargs: -W clippy::pedantic -W clippy::nursery
+          - toolchain: nightly
+            os: ubuntu-20.04
+            features: --all-features
             clippyargs: -W clippy::pedantic
-          # - os: ubuntu-latest
-          #   toolchain: 1.41.1 # Debian 10 Buster
-          #   clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
-          - os: ubuntu-latest
-            toolchain: 1.47.0 # Alpine 3.13
-            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
-          - os: ubuntu-latest
-            toolchain: 1.48.0 # Debian 11 Bullseye
-            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
     steps:
-      - uses: actions/checkout@v2
-
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -46,19 +41,33 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
 
-      - name: Run clippy
+      - uses: actions/checkout@v2
+
+      - name: Fetch dependencies
+        uses: actions-rs/cargo@v1
+        with:
+          command: fetch
+          args: --verbose --locked
+
+      - name: Check clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --verbose --locked --all-targets --all-features -- ${{ matrix.clippyargs }}
+          args: --verbose --locked --all-targets ${{ matrix.features }} -- ${{ matrix.clippyargs }}
+
+      - name: Check docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --verbose --locked --no-deps ${{ matrix.features }}
 
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --verbose --locked --all-features
+          args: --verbose --locked ${{ matrix.features }}
 
-  release:
+  github-release:
     name: Release ${{ matrix.triple }}
     runs-on: ${{ matrix.os }}
     needs: test
@@ -66,39 +75,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            triple: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            triple: arm-unknown-linux-gnueabihf
-          - os: ubuntu-latest
-            triple: armv7-unknown-linux-gnueabihf
-          - os: ubuntu-latest
-            triple: aarch64-unknown-linux-gnu
-          - os: macOS-latest
-            triple: x86_64-apple-darwin
-          - os: macOS-latest
-            triple: aarch64-apple-darwin
-          - os: windows-latest
-            triple: x86_64-pc-windows-msvc
-          - os: windows-latest
-            triple: aarch64-pc-windows-msvc
+          - triple: x86_64-unknown-linux-gnu
+            os: ubuntu-20.04
+          - triple: arm-unknown-linux-gnueabihf
+            os: ubuntu-20.04
+          - triple: armv7-unknown-linux-gnueabihf
+            os: ubuntu-20.04
+          - triple: aarch64-unknown-linux-gnu
+            os: ubuntu-20.04
 
+          - triple: x86_64-apple-darwin
+            os: macos-11
+          - triple: aarch64-apple-darwin
+            os: macos-11
+
+          - triple: x86_64-pc-windows-msvc
+            os: windows-2022
+          - triple: aarch64-pc-windows-msvc
+            os: windows-2022
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Set Artifact Name
-        shell: bash
-        run: |
-          version=$(git describe --tags --match "v*.*.*" --always)
-          echo "version is: $version"
-          echo "GIT_TAG_VERSION=$version" >> $GITHUB_ENV
-
-          name="markdown-to-standalone-html-$version-${{ matrix.triple }}"
-          echo "artifact name is: $name"
-          echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
-
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -107,31 +102,51 @@ jobs:
           target: ${{ matrix.triple }}
           toolchain: stable
 
-      - name: Build release
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set artifact name
+        shell: bash
+        run: |
+          version="$(git describe --tags --match "v*.*.*" --always)"
+          echo "version: $version"
+          echo "GIT_TAG_VERSION=$version" >> $GITHUB_ENV
+
+          name="markdown-to-standalone-html-$version-${{ matrix.triple }}"
+          echo "artifact: $name"
+          echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
+
+      - name: Fetch dependencies
         uses: actions-rs/cargo@v1
-        env:
-          # TODO: Remove this once it's the default
-          SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk
+        with:
+          command: fetch
+          args: --verbose --locked
+
+      - name: Build
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --verbose --locked --all-features --target ${{ matrix.triple }}
           use-cross: ${{ runner.os == 'Linux' && matrix.triple != 'x86_64-unknown-linux-gnu' }}
 
-      - name: Pack release (-nix)
+      - name: Package (*nix)
         if: runner.os != 'Windows'
         run: >
-          tar --gzip -cvf ${{ env.ARTIFACT_NAME }}.tar.gz
-          completions LICENSE
-          -C target/${{ matrix.triple }}/release markdown-to-standalone-html
-      - name: Pack release (windows)
+          tar -cv
+          LICENSE README.md
+          -C target/ completions/ -C ../
+          -C target/${{ matrix.triple }}/release/ markdown-to-standalone-html
+          | gzip --best > ${{ env.ARTIFACT_NAME }}.tar.gz
+      - name: Package (Windows)
         if: runner.os == 'Windows'
-        run: |
-          7z a ${{ env.ARTIFACT_NAME }}.zip completions LICENSE
-          cd target/${{ matrix.triple }}/release
-          7z a ../../../${{ env.ARTIFACT_NAME }}.zip markdown-to-standalone-html.exe
-          cd -
+        run: >
+          7z a ${{ env.ARTIFACT_NAME }}.zip
+          LICENSE README.md
+          ./target/completions/
+          ./target/${{ matrix.triple }}/release/markdown-to-standalone-html.exe
 
-      - name: Upload Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.triple }}
@@ -139,13 +154,10 @@ jobs:
             *.zip
             *.tar.gz
 
-      - name: GH Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
           files: |
             *.zip
             *.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

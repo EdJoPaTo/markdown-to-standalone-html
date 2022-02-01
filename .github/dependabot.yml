@@ -8,6 +8,6 @@ updates:
     open-pull-requests-limit: 30
     schedule:
       interval: "monthly"
-      time: "03:37" # UTC
+      time: "02:42" # UTC
     commit-message:
-      prefix: "chore(cargo):"
+      prefix: "build(cargo):"
