@@ -6,8 +6,8 @@ use crate::highlight_code::Highlighter;
 pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
     let parser = Parser::new(markdown);
 
-    let mut heading_level = 0;
-    let mut heading_texts: Vec<String> = Vec::new();
+    let mut heading_level = None;
+    let mut heading_texts = Vec::new();
     let mut headings = Headings::default();
 
     let code_highlighter = Highlighter::new();
@@ -18,27 +18,28 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
             code_language = Some(lang.to_string());
             Some(Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))))
         }
-        Event::Start(Tag::Heading(level @ 1..=6)) => {
-            heading_level = level;
+        Event::Start(Tag::Heading(level, _id, _classes)) => {
+            heading_level = Some(level);
             heading_texts = Vec::new();
             None
         }
-        Event::End(Tag::Heading(level @ 1..=6)) => {
+        Event::End(Tag::Heading(level, _id, _classes)) => {
             assert_eq!(
-                heading_level, level,
+                heading_level,
+                Some(level),
                 "the heading level should start and end the same"
             );
             let text = heading_texts.join("");
-            let anchor = headings.create_from_title(heading_level, &text);
+            let anchor = headings.create_from_title(level, &text);
             let event = Event::Html(CowStr::from(format!(
-                "<h{} id=\"{}\">{}</h{}>",
+                "<{} id=\"{}\">{}</{}>",
                 level, anchor, text, level
             )));
-            heading_level = 0;
+            heading_level = None;
             heading_texts = Vec::new();
             Some(event)
         }
-        Event::Text(text) if heading_level > 0 => {
+        Event::Text(text) if heading_level.is_some() => {
             heading_texts.push(text.to_string());
             None
         }
