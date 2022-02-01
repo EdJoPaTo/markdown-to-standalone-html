@@ -284,6 +284,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "handlebars",
+ "lazy_static",
  "pulldown-cmark",
  "regex",
  "serde_json",

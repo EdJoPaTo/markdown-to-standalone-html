@@ -2,6 +2,10 @@ use std::cmp::Ordering;
 
 use regex::Regex;
 
+lazy_static::lazy_static! {
+    static ref NON_ASCII_REGEX: Regex = Regex::new("[^a-zA-Z\\d]+").unwrap();
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Heading {
     pub level: u32,
@@ -9,24 +13,15 @@ pub struct Heading {
     pub title: String,
 }
 
+#[derive(Default)]
 pub struct Headings {
     pub list: Vec<Heading>,
     existing_anchors: Vec<String>,
-    non_ascii_regex: Regex,
 }
 
 impl Headings {
-    pub fn new() -> Self {
-        Self {
-            existing_anchors: Vec::new(),
-            list: Vec::new(),
-            non_ascii_regex: Regex::new("[^a-zA-Z\\d]+").unwrap(),
-        }
-    }
-
     pub fn create_from_title(&mut self, level: u32, title: &str) -> String {
-        let main = self
-            .non_ascii_regex
+        let main = NON_ASCII_REGEX
             .replace_all(title, "-")
             .trim_matches('-')
             .to_ascii_lowercase();
@@ -87,7 +82,7 @@ pub fn to_html_toc(headings: &[Heading]) -> String {
 
 #[test]
 fn anchor_of_title_examples() {
-    let mut headings = Headings::new();
+    let mut headings = Headings::default();
     assert_eq!("a-b", headings.create_from_title(1, " A b"));
     assert_eq!(
         "passw-rter",
@@ -97,7 +92,7 @@ fn anchor_of_title_examples() {
 
 #[test]
 fn anchor_of_title_is_unique() {
-    let mut headings = Headings::new();
+    let mut headings = Headings::default();
     assert_eq!("a", headings.create_from_title(1, "a"));
     assert_eq!("a-2", headings.create_from_title(1, "a"));
     assert_eq!("a-3", headings.create_from_title(1, "a"));

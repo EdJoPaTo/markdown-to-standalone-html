@@ -8,7 +8,7 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
 
     let mut heading_level = 0;
     let mut heading_texts: Vec<String> = Vec::new();
-    let mut headings = Headings::new();
+    let mut headings = Headings::default();
 
     let code_highlighter = Highlighter::new();
     let mut code_language = None;
