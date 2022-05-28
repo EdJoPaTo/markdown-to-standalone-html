@@ -24,7 +24,7 @@ impl Highlighter {
         Self { ss, theme }
     }
 
-    pub fn highlight(&self, language: &str, text: &str) -> String {
+    pub fn highlight(&self, language: &str, text: &str) -> Result<String, syntect::Error> {
         let syntax = self
             .ss
             .find_syntax_by_token(language)

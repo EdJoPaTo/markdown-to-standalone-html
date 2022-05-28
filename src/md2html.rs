@@ -44,10 +44,16 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
             None
         }
         Event::Text(text) if code_language.is_some() => {
-            let language = &code_language.as_ref().unwrap();
-            let html = code_highlighter.highlight(language, &text);
+            let language = code_language.as_ref().unwrap();
+            let event = match code_highlighter.highlight(language, &text) {
+                Ok(html) => Event::Html(CowStr::from(html)),
+                Err(err) => {
+                    eprintln!("Warning: Failed creating source code formatting: {}", err);
+                    Event::Text(text)
+                }
+            };
             code_language = None;
-            Some(Event::Html(CowStr::from(html)))
+            Some(event)
         }
         _ => Some(event),
     });
