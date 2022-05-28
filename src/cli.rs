@@ -1,24 +1,23 @@
-use clap::{app_from_crate, App, AppSettings, Arg};
+use clap::{command, Arg, Command, ValueHint};
 
+#[allow(clippy::too_many_lines)]
 #[must_use]
-pub fn build() -> App<'static> {
+pub fn build() -> Command<'static> {
     let markdown_file = Arg::new("markdown-file")
+        .value_hint(ValueHint::FilePath)
         .value_name("FILE")
         .takes_value(true)
         .required(true)
         .help("Markdown file to be parsed. Use - to read from stdin instead.");
 
-    app_from_crate!()
+    command!()
         .name("Markdown to Standalone HTML")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .setting(AppSettings::SubcommandsNegateReqs)
+        .subcommand_negates_reqs(true)
         .subcommand(
-            App::new("template").about("Print the included template to stdout."),
+            Command::new("template").about("Print the included template to stdout."),
         )
         .subcommand(
-            App::new("raw")
+            Command::new("raw")
                 .about("Only parse the markdown to html without any further modifications")
                 .arg(&markdown_file),
         )
@@ -26,6 +25,8 @@ pub fn build() -> App<'static> {
             Arg::new("template-file")
                 .long("template")
                 .short('t')
+                .env("TEMPLATE_FILE")
+                .value_hint(ValueHint::FilePath)
                 .value_name("FILE")
                 .takes_value(true)
                 .help("Template file to be used instead of the builtin one.")
@@ -35,6 +36,7 @@ pub fn build() -> App<'static> {
             Arg::new("no-inline")
                 .long("no-inline")
                 .short('i')
+                .env("NO_INLINE")
                 .help("Don't try to inline assets.")
                 .long_help("Don't try to inline assets. Normally assets are inlined with monolith. When monolith is not in PATH a warning is shown. This warning is also suppressed with this flag."),
         )
@@ -44,6 +46,6 @@ pub fn build() -> App<'static> {
 }
 
 #[test]
-fn verify_app() {
+fn verify() {
     build().debug_assert();
 }
