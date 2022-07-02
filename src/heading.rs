@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt::Write;
 
 use pulldown_cmark::HeadingLevel;
 use regex::Regex;
@@ -7,7 +8,6 @@ lazy_static::lazy_static! {
     static ref NON_ASCII_REGEX: Regex = Regex::new("[^a-zA-Z\\d]+").unwrap();
 }
 
-#[derive(Debug, PartialEq)]
 pub struct Heading {
     pub level: HeadingLevel,
     pub anchor: String,
@@ -76,10 +76,12 @@ pub fn to_html_toc(headings: &[Heading]) -> String {
             }
         }
 
-        result += &format!(
+        write!(
+            result,
             r##"<li><a href="#{}">{}</a>"##,
             heading.anchor, heading.title
-        );
+        )
+        .unwrap();
     }
 
     while last_level > 0 {
