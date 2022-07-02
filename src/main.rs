@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::Read;
+use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use serde_json::json;
@@ -24,18 +25,18 @@ fn main() {
     }
 
     if let Some(matches) = matches.subcommand_matches("raw") {
-        let input_path = matches.value_of("markdown-file").unwrap();
+        let input_path = matches.get_one::<PathBuf>("markdown-file").unwrap();
         let markdown = read_markdown(input_path);
         let (html_part, _) = md2html::parse(&markdown);
         println!("{}", html_part);
         return;
     }
 
-    let input_path = matches.value_of("markdown-file").unwrap();
+    let input_path = matches.get_one::<PathBuf>("markdown-file").unwrap();
     let markdown = read_markdown(input_path);
     let (html_part, headings) = md2html::parse(&markdown);
 
-    let template = matches.value_of("template-file").map_or_else(
+    let template = matches.get_one::<PathBuf>("template-file").map_or_else(
         || TEMPLATE.to_string(),
         |path| fs::read_to_string(path).expect("failed to read template file"),
     );
@@ -60,7 +61,7 @@ fn main() {
         )
         .expect("failed to render template");
 
-    if matches.is_present("no-inline") {
+    if matches.contains_id("no-inline") {
         println!("{}", rendered);
     } else {
         let inlined = match inline_assets(rendered.clone()) {
@@ -78,8 +79,8 @@ fn main() {
     }
 }
 
-fn read_markdown(input_path: &str) -> String {
-    if input_path == "-" {
+fn read_markdown(input_path: &Path) -> String {
+    if input_path.to_str() == Some("-") {
         let mut input = String::new();
         std::io::stdin()
             .lock()

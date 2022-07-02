@@ -1,3 +1,4 @@
+use clap::builder::ValueParser;
 use clap::{command, Arg, Command, ValueHint};
 
 #[allow(clippy::too_many_lines)]
@@ -6,6 +7,7 @@ pub fn build() -> Command<'static> {
     let markdown_file = Arg::new("markdown-file")
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
+        .value_parser(ValueParser::path_buf())
         .takes_value(true)
         .required(true)
         .help("Markdown file to be parsed. Use - to read from stdin instead.");
@@ -28,6 +30,7 @@ pub fn build() -> Command<'static> {
                 .env("TEMPLATE_FILE")
                 .value_hint(ValueHint::FilePath)
                 .value_name("FILE")
+                .value_parser(ValueParser::path_buf())
                 .takes_value(true)
                 .help("Template file to be used instead of the builtin one.")
                 .long_help("Template file to be used instead of the builtin one. Use the subcommand template to print the builtin template to stdout."),
