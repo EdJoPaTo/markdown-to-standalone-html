@@ -285,7 +285,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "handlebars",
- "lazy_static",
+ "once_cell",
  "pulldown-cmark",
  "regex",
  "serde_json",

@@ -1,12 +1,11 @@
 use std::cmp::Ordering;
 use std::fmt::Write;
 
+use once_cell::sync::Lazy;
 use pulldown_cmark::HeadingLevel;
 use regex::Regex;
 
-lazy_static::lazy_static! {
-    static ref NON_ASCII_REGEX: Regex = Regex::new("[^a-zA-Z\\d]+").unwrap();
-}
+static NON_ASCII_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("[^a-zA-Z\\d]+").unwrap());
 
 pub struct Heading {
     pub level: HeadingLevel,
