@@ -1,54 +1,67 @@
-use clap::builder::ValueParser;
-use clap::{command, Arg, Command, ValueHint};
+use std::path::PathBuf;
 
-#[allow(clippy::too_many_lines)]
-#[must_use]
-pub fn build() -> Command<'static> {
-    let markdown_file = Arg::new("markdown-file")
-        .value_hint(ValueHint::FilePath)
-        .value_name("FILE")
-        .value_parser(ValueParser::path_buf())
-        .takes_value(true)
-        .required(true)
-        .help("Markdown file to be parsed. Use - to read from stdin instead.");
+use clap::{Parser, ValueHint};
 
-    command!()
-        .name("Markdown to Standalone HTML")
-        .subcommand_negates_reqs(true)
-        .subcommand(
-            Command::new("template").about("Print the included template to stdout."),
-        )
-        .subcommand(
-            Command::new("raw")
-                .about("Only parse the markdown to html without any further modifications")
-                .arg(&markdown_file),
-        )
-        .arg(
-            Arg::new("template-file")
-                .long("template")
-                .short('t')
-                .env("TEMPLATE_FILE")
-                .value_hint(ValueHint::FilePath)
-                .value_name("FILE")
-                .value_parser(ValueParser::path_buf())
-                .takes_value(true)
-                .help("Template file to be used instead of the builtin one.")
-                .long_help("Template file to be used instead of the builtin one. Use the subcommand template to print the builtin template to stdout."),
-        )
-        .arg(
-            Arg::new("no-inline")
-                .long("no-inline")
-                .short('i')
-                .env("NO_INLINE")
-                .help("Don't try to inline assets.")
-                .long_help("Don't try to inline assets. Normally assets are inlined with monolith. When monolith is not in PATH a warning is shown. This warning is also suppressed with this flag."),
-        )
-        .arg(
-            &markdown_file,
-        )
+#[derive(Debug, Parser)]
+pub enum SubCommands {
+    /// Render the markdown to html.
+    #[command()]
+    Render {
+        /// Template file to be used instead of the builtin one.
+        ///
+        /// Use the subcommand template to print the builtin template to stdout.
+        #[arg(
+        long,
+        short,
+        env,
+        value_hint = ValueHint::FilePath,
+        value_name = "FILE",
+    )]
+        template_file: Option<PathBuf>,
+
+        /// Don't try to inline assets.
+        ///
+        /// Normally assets are inlined with monolith.
+        /// When monolith is not in PATH a warning is shown.
+        /// This warning is also suppressed with this flag.
+        #[arg(long, short = 'i', env)]
+        no_inline: bool,
+
+        /// Markdown file to be parsed.
+        /// Use - to read from stdin instead.
+        #[arg(
+        value_hint = ValueHint::FilePath,
+        value_name = "FILE",
+    )]
+        markdown_file: PathBuf,
+    },
+
+    /// Print the included template to stdout.
+    #[command()]
+    Template {},
+
+    /// Only parse the markdown to html without any further modifications.
+    #[command()]
+    Raw {
+        /// Markdown file to be parsed.
+        /// Use - to read from stdin instead.
+        #[arg(
+            value_hint = ValueHint::FilePath,
+            value_name = "FILE",
+        )]
+        markdown_file: PathBuf,
+    },
+}
+
+#[derive(Debug, Parser)]
+#[command(about, version, subcommand_negates_reqs = true)]
+pub struct Cli {
+    #[clap(subcommand)]
+    pub subcommands: SubCommands,
 }
 
 #[test]
 fn verify() {
-    build().debug_assert();
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
 }

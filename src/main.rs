@@ -1,7 +1,8 @@
 use std::fs;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use clap::Parser;
 use handlebars::Handlebars;
 use serde_json::json;
 
@@ -17,65 +18,67 @@ const GENERATOR: &str = concat!(env!("CARGO_PKG_REPOSITORY"), " ", env!("CARGO_P
 const TEMPLATE: &str = include_str!("template.html");
 
 fn main() {
-    let matches = cli::build().get_matches();
+    let matches = cli::Cli::parse();
 
-    if matches.subcommand_matches("template").is_some() {
-        println!("{}", TEMPLATE);
-        return;
-    }
+    match matches.subcommands {
+        cli::SubCommands::Template {} => {
+            println!("{}", TEMPLATE);
+        }
+        cli::SubCommands::Raw { markdown_file } => {
+            let markdown = read_markdown(&markdown_file);
+            let (html_part, _) = md2html::parse(&markdown);
+            println!("{}", html_part);
+        }
+        cli::SubCommands::Render {
+            template_file,
+            no_inline,
+            markdown_file,
+        } => {
+            let markdown = read_markdown(&markdown_file);
+            let (html_part, headings) = md2html::parse(&markdown);
 
-    if let Some(matches) = matches.subcommand_matches("raw") {
-        let input_path = matches.get_one::<PathBuf>("markdown-file").unwrap();
-        let markdown = read_markdown(input_path);
-        let (html_part, _) = md2html::parse(&markdown);
-        println!("{}", html_part);
-        return;
-    }
+            let template = template_file.map_or_else(
+                || TEMPLATE.to_string(),
+                |path| fs::read_to_string(path).expect("failed to read template file"),
+            );
 
-    let input_path = matches.get_one::<PathBuf>("markdown-file").unwrap();
-    let markdown = read_markdown(input_path);
-    let (html_part, headings) = md2html::parse(&markdown);
+            let toc_part = heading::to_html_toc(&headings);
 
-    let template = matches.get_one::<PathBuf>("template-file").map_or_else(
-        || TEMPLATE.to_string(),
-        |path| fs::read_to_string(path).expect("failed to read template file"),
-    );
+            let title = headings.first().map(|o| o.title.clone());
 
-    let toc_part = heading::to_html_toc(&headings);
+            let body = format!(
+                r#"<nav class="toc">{}</nav><main>{}</main>"#,
+                toc_part, html_part
+            );
 
-    let title = headings.first().map(|o| o.title.clone());
+            let rendered = Handlebars::new()
+                .render_template(
+                    &template,
+                    &json!({
+                        "body": body,
+                        "generator": GENERATOR,
+                        "title": title,
+                    }),
+                )
+                .expect("failed to render template");
 
-    let body = format!(
-        r#"<nav class="toc">{}</nav><main>{}</main>"#,
-        toc_part, html_part
-    );
+            if no_inline {
+                println!("{}", rendered);
+            } else {
+                let inlined = match inline_assets(rendered.clone()) {
+                    Ok(html) => html,
+                    Err(err) => {
+                        eprintln!(
+                            "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
+                            err
+                        );
+                        rendered
+                    }
+                };
 
-    let rendered = Handlebars::new()
-        .render_template(
-            &template,
-            &json!({
-                "body": body,
-                "generator": GENERATOR,
-                "title": title,
-            }),
-        )
-        .expect("failed to render template");
-
-    if matches.contains_id("no-inline") {
-        println!("{}", rendered);
-    } else {
-        let inlined = match inline_assets(rendered.clone()) {
-            Ok(html) => html,
-            Err(err) => {
-                eprintln!(
-                    "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
-                    err
-                );
-                rendered
+                println!("{}", inlined);
             }
-        };
-
-        println!("{}", inlined);
+        }
     }
 }
 
