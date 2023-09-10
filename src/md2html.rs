@@ -32,8 +32,7 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
             let text = heading_texts.join("");
             let anchor = headings.create_from_title(level, &text);
             let event = Event::Html(CowStr::from(format!(
-                "<{} id=\"{}\">{}</{}>",
-                level, anchor, text, level
+                "<{level} id=\"{anchor}\">{text}</{level}>"
             )));
             heading_level = None;
             heading_texts = Vec::new();
@@ -48,7 +47,7 @@ pub fn parse(markdown: &str) -> (String, Vec<Heading>) {
             let event = match code_highlighter.highlight(language, &text) {
                 Ok(html) => Event::Html(CowStr::from(html)),
                 Err(err) => {
-                    eprintln!("Warning: Failed creating source code formatting: {}", err);
+                    eprintln!("Warning: Failed creating source code formatting: {err}");
                     Event::Text(text)
                 }
             };

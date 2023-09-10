@@ -22,12 +22,12 @@ fn main() {
 
     match matches.subcommands {
         cli::SubCommands::Template {} => {
-            println!("{}", TEMPLATE);
+            println!("{TEMPLATE}");
         }
         cli::SubCommands::Raw { markdown_file } => {
             let markdown = read_markdown(&markdown_file);
             let (html_part, _) = md2html::parse(&markdown);
-            println!("{}", html_part);
+            println!("{html_part}");
         }
         cli::SubCommands::Render {
             template_file,
@@ -46,10 +46,7 @@ fn main() {
 
             let title = headings.first().map(|o| o.title.clone());
 
-            let body = format!(
-                r#"<nav class="toc">{}</nav><main>{}</main>"#,
-                toc_part, html_part
-            );
+            let body = format!(r#"<nav class="toc">{toc_part}</nav><main>{html_part}</main>"#);
 
             let rendered = Handlebars::new()
                 .render_template(
@@ -63,20 +60,19 @@ fn main() {
                 .expect("failed to render template");
 
             if no_inline {
-                println!("{}", rendered);
+                println!("{rendered}");
             } else {
                 let inlined = match inline_assets(rendered.clone()) {
                     Ok(html) => html,
                     Err(err) => {
                         eprintln!(
-                            "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {}",
-                            err
+                            "INFO: html assets are not inlined. Is monolith installed and in PATH? Reason: {err}"
                         );
                         rendered
                     }
                 };
 
-                println!("{}", inlined);
+                println!("{inlined}");
             }
         }
     }

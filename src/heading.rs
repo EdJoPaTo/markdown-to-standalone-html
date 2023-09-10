@@ -30,7 +30,7 @@ impl Headings {
         let mut index = 1;
         while self.existing_anchors.contains(&anchor) {
             index += 1;
-            anchor = format!("{}-{}", main, index);
+            anchor = format!("{main}-{index}");
         }
 
         self.existing_anchors.push(anchor.clone());
