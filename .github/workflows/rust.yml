@@ -5,6 +5,18 @@ on:
   pull_request:
 
 jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Rust
+        shell: bash -eux {0}
+        run: |
+          rm ~/.cargo/bin/{rustfmt,cargo-fmt}
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+      - uses: actions/checkout@v4
+      - run: cargo fmt --check --verbose
+
   test:
     name: Test ${{ matrix.toolchain }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -15,9 +27,9 @@ jobs:
         toolchain:
           - stable
         os:
-          - ubuntu-20.04
-          - macos-11
-          - windows-2022
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
         clippyargs:
           - -D clippy::pedantic -D warnings
         features:
@@ -25,23 +37,21 @@ jobs:
         include:
           # Check future versions and maybe get some glances on soon to be lints
           - toolchain: beta
-            os: ubuntu-20.04
+            os: ubuntu-latest
             features: --all-features
             clippyargs: -W clippy::pedantic -W clippy::nursery
           - toolchain: nightly
-            os: ubuntu-20.04
+            os: ubuntu-latest
             features: --all-features
             clippyargs: -W clippy::pedantic
     steps:
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          components: clippy
-          override: true
-          profile: minimal
-          toolchain: ${{ matrix.toolchain }}
+        shell: bash -eux {0}
+        run: |
+          rustup toolchain install ${{ matrix.toolchain }} --profile minimal --component clippy
+          rustup default ${{ matrix.toolchain }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Fetch dependencies
         uses: actions-rs/cargo@v1
@@ -71,40 +81,40 @@ jobs:
     name: Release ${{ matrix.triple }}
     runs-on: ${{ matrix.os }}
     needs: test
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - triple: x86_64-unknown-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - triple: aarch64-unknown-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - triple: armv7-unknown-linux-gnueabihf
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - triple: arm-unknown-linux-gnueabihf
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - triple: riscv64gc-unknown-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-latest
 
           - triple: x86_64-apple-darwin
-            os: macos-11
+            os: macos-latest
           - triple: aarch64-apple-darwin
-            os: macos-11
+            os: macos-latest
 
           - triple: x86_64-pc-windows-msvc
-            os: windows-2022
+            os: windows-latest
           - triple: aarch64-pc-windows-msvc
-            os: windows-2022
+            os: windows-latest
     steps:
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          profile: minimal
-          target: ${{ matrix.triple }}
-          toolchain: stable
+        shell: bash -eux {0}
+        run: |
+          rustup toolchain install stable --profile minimal --target ${{ matrix.triple }}
+          rustup default stable
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -120,17 +130,14 @@ jobs:
           echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
 
       - name: Fetch dependencies
-        uses: actions-rs/cargo@v1
-        with:
-          command: fetch
-          args: --verbose --locked
+        run: cargo fetch --verbose --locked
 
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --verbose --locked --all-features --target ${{ matrix.triple }}
-          use-cross: ${{ runner.os == 'Linux' && matrix.triple != 'x86_64-unknown-linux-gnu' }}
+          use-cross: ${{ runner.os == 'Linux' }}
 
       - name: Package tar.gz (*nix)
         if: runner.os != 'Windows'
