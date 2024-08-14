@@ -38,13 +38,13 @@ fn main() {
             let (html_part, headings) = md2html::parse(&markdown);
 
             let template = template_file.map_or_else(
-                || TEMPLATE.to_string(),
+                || TEMPLATE.to_owned(),
                 |path| fs::read_to_string(path).expect("failed to read template file"),
             );
 
             let toc_part = heading::to_html_toc(&headings);
 
-            let title = headings.first().map(|o| o.title.clone());
+            let title = headings.first().map(|heading| &heading.title);
 
             let body = format!(r#"<nav class="toc">{toc_part}</nav><main>{html_part}</main>"#);
 

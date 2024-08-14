@@ -1,11 +1,8 @@
 use std::cmp::Ordering;
 use std::fmt::Write;
 
-use once_cell::sync::Lazy;
+use lazy_regex::regex;
 use pulldown_cmark::HeadingLevel;
-use regex::Regex;
-
-static NON_ASCII_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("[^a-zA-Z\\d]+").unwrap());
 
 pub struct Heading {
     pub level: HeadingLevel,
@@ -15,13 +12,15 @@ pub struct Heading {
 
 #[derive(Default)]
 pub struct Headings {
-    pub list: Vec<Heading>,
+    list: Vec<Heading>,
     existing_anchors: Vec<String>,
 }
 
 impl Headings {
-    pub fn create_from_title(&mut self, level: HeadingLevel, title: &str) -> String {
-        let main = NON_ASCII_REGEX
+    /// Returns the anchor to be used in links to this heading
+    pub fn add(&mut self, level: HeadingLevel, title: &str) -> String {
+        // filter out non ascii
+        let main = regex!("[^a-zA-Z\\d]+")
             .replace_all(title, "-")
             .trim_matches('-')
             .to_ascii_lowercase();
@@ -37,10 +36,14 @@ impl Headings {
         self.list.push(Heading {
             level,
             anchor: anchor.clone(),
-            title: title.to_string(),
+            title: title.to_owned(),
         });
 
         anchor
+    }
+
+    pub fn finish(self) -> Vec<Heading> {
+        self.list
     }
 }
 
@@ -94,19 +97,19 @@ pub fn to_html_toc(headings: &[Heading]) -> String {
 #[test]
 fn anchor_of_title_examples() {
     let mut headings = Headings::default();
-    assert_eq!("a-b", headings.create_from_title(HeadingLevel::H1, " A b"));
+    assert_eq!("a-b", headings.add(HeadingLevel::H1, " A b"));
     assert_eq!(
         "passw-rter",
-        headings.create_from_title(HeadingLevel::H1, "passw\u{f6}rter")
+        headings.add(HeadingLevel::H1, "passw\u{f6}rter")
     );
 }
 
 #[test]
 fn anchor_of_title_is_unique() {
     let mut headings = Headings::default();
-    assert_eq!("a", headings.create_from_title(HeadingLevel::H1, "a"));
-    assert_eq!("a-2", headings.create_from_title(HeadingLevel::H1, "a"));
-    assert_eq!("a-3", headings.create_from_title(HeadingLevel::H1, "a"));
+    assert_eq!("a", headings.add(HeadingLevel::H1, "a"));
+    assert_eq!("a-2", headings.add(HeadingLevel::H1, "a"));
+    assert_eq!("a-3", headings.add(HeadingLevel::H1, "a"));
 }
 
 #[test]
@@ -127,28 +130,28 @@ fn to_html_toc_example_level2() {
     let headings = vec![
         Heading {
             level: HeadingLevel::H1,
-            anchor: "coffee".to_string(),
-            title: "Coffee".to_string(),
+            anchor: "coffee".to_owned(),
+            title: "Coffee".to_owned(),
         },
         Heading {
             level: HeadingLevel::H1,
-            anchor: "tea".to_string(),
-            title: "Tea".to_string(),
+            anchor: "tea".to_owned(),
+            title: "Tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H2,
-            anchor: "black_tea".to_string(),
-            title: "Black tea".to_string(),
+            anchor: "black_tea".to_owned(),
+            title: "Black tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H2,
-            anchor: "green_tea".to_string(),
-            title: "Green tea".to_string(),
+            anchor: "green_tea".to_owned(),
+            title: "Green tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H1,
-            anchor: "milk".to_string(),
-            title: "Milk".to_string(),
+            anchor: "milk".to_owned(),
+            title: "Milk".to_owned(),
         },
     ];
 
@@ -179,38 +182,38 @@ fn to_html_toc_example_level3() {
     let headings = vec![
         Heading {
             level: HeadingLevel::H1,
-            anchor: "coffee".to_string(),
-            title: "Coffee".to_string(),
+            anchor: "coffee".to_owned(),
+            title: "Coffee".to_owned(),
         },
         Heading {
             level: HeadingLevel::H1,
-            anchor: "tea".to_string(),
-            title: "Tea".to_string(),
+            anchor: "tea".to_owned(),
+            title: "Tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H2,
-            anchor: "black_tea".to_string(),
-            title: "Black tea".to_string(),
+            anchor: "black_tea".to_owned(),
+            title: "Black tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H2,
-            anchor: "green_tea".to_string(),
-            title: "Green tea".to_string(),
+            anchor: "green_tea".to_owned(),
+            title: "Green tea".to_owned(),
         },
         Heading {
             level: HeadingLevel::H3,
-            anchor: "china".to_string(),
-            title: "China".to_string(),
+            anchor: "china".to_owned(),
+            title: "China".to_owned(),
         },
         Heading {
             level: HeadingLevel::H3,
-            anchor: "africa".to_string(),
-            title: "Africa".to_string(),
+            anchor: "africa".to_owned(),
+            title: "Africa".to_owned(),
         },
         Heading {
             level: HeadingLevel::H1,
-            anchor: "milk".to_string(),
-            title: "Milk".to_string(),
+            anchor: "milk".to_owned(),
+            title: "Milk".to_owned(),
         },
     ];
 

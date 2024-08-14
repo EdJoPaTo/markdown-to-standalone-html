@@ -38,7 +38,7 @@ pub enum SubCommands {
 
     /// Print the included template to stdout.
     #[command()]
-    Template {},
+    Template,
 
     /// Only parse the markdown to html without any further modifications.
     #[command()]
