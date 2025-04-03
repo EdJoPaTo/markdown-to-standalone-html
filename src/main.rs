@@ -21,7 +21,7 @@ fn main() {
     let matches = cli::Cli::parse();
 
     match matches.subcommands {
-        cli::SubCommands::Template {} => {
+        cli::SubCommands::Template => {
             println!("{TEMPLATE}");
         }
         cli::SubCommands::Raw { markdown_file } => {
